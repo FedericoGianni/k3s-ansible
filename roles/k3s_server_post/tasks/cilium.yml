@@ -257,34 +257,34 @@
             label: "{{ item }}"
       
     - name: Configure Cilium L2
-        when: cilium_l2
-        block:
+      when: cilium_l2
+      block:
 
-          - name: Copy L2 manifests to first master
-            ansible.builtin.template:
-              src: "ciliuml2.crs.j2"
-              dest: /tmp/k3s/cilium-l2.yaml
-              owner: root
-              group: root
-              mode: 0755
+        - name: Copy L2 manifests to first master
+          ansible.builtin.template:
+            src: "ciliuml2.crs.j2"
+            dest: /tmp/k3s/cilium-l2.yaml
+            owner: root
+            group: root
+            mode: 0755
 
-          - name: Apply L2 manifests
-            ansible.builtin.command:
-              cmd: kubectl apply -f /tmp/k3s/cilium-l2.yaml
-            register: apply_cr
-            changed_when: "'configured' in apply_cr.stdout or 'created' in apply_cr.stdout"
-            failed_when: "'is invalid' in apply_cr.stderr"
-            ignore_errors: true
+        - name: Apply L2 manifests
+          ansible.builtin.command:
+            cmd: kubectl apply -f /tmp/k3s/cilium-l2.yaml
+          register: apply_cr
+          changed_when: "'configured' in apply_cr.stdout or 'created' in apply_cr.stdout"
+          failed_when: "'is invalid' in apply_cr.stderr"
+          ignore_errors: true
 
-          - name: Print error message if L2 manifests application fails
-            ansible.builtin.debug:
-              msg: "{{ apply_cr.stderr }}"
-            when: "'is invalid' in apply_cr.stderr"
+        - name: Print error message if L2 manifests application fails
+          ansible.builtin.debug:
+            msg: "{{ apply_cr.stderr }}"
+          when: "'is invalid' in apply_cr.stderr"
 
-          - name: Test for L2 config resources
-            ansible.builtin.command: "{{ item }}"
-            loop:
-              - k3s kubectl get CiliumLoadBalancerIPPool.cilium.io
-            changed_when: false
-            loop_control:
-              label: "{{ item }}"
+        - name: Test for L2 config resources
+          ansible.builtin.command: "{{ item }}"
+          loop:
+            - k3s kubectl get CiliumLoadBalancerIPPool.cilium.io
+          changed_when: false
+          loop_control:
+            label: "{{ item }}"
