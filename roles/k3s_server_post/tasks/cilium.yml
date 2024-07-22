@@ -170,6 +170,10 @@
         {% if cilium_mode == "native" or (cilium_bgp and cilium_exportPodCIDR != 'false') %}
         --helm-set ipv4NativeRoutingCIDR={{ cluster_cidr }}
         {% endif %}
+        {% if cilium_l2 == "true" %}
+        --helm-set l2announcements.enabled=true
+        --helm-set kubeProxyReplacement=true
+        {% endif %}
         --helm-set k8sServiceHost="127.0.0.1"
         --helm-set k8sServicePort="6444"
         --helm-set routingMode={{ cilium_mode | default("native") }}
