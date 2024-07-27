@@ -173,6 +173,7 @@
         {% if cilium_l2 == "true" %}
         --helm-set l2announcements.enabled=true
         --helm-set kubeProxyReplacement=true
+        --helm-set ipam.mode=kubernetes
         {% endif %}
         --helm-set k8sServiceHost="127.0.0.1"
         --helm-set k8sServicePort="6444"
