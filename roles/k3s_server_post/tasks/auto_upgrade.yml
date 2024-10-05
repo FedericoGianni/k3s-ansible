@@ -1,0 +1,38 @@
+---
+- name: Apply system-upgrade-controller deployment
+  ansible.builtin.shell:
+    cmd: "kubectl apply -f https://github.com/rancher/system-upgrade-controller/releases/latest/download/system-upgrade-controller.yaml"
+  register: upgrade_controller_result
+  ignore_errors: true
+  retries: 3
+  delay: 1
+  until: upgrade_controller_result.rc == 0
+
+- name: Apply system-upgrade-controller CRD
+  ansible.builtin.shell:
+    cmd: "kubectl apply -f https://github.com/rancher/system-upgrade-controller/releases/latest/download/crd.yaml"
+  register: upgrade_crd_result
+  ignore_errors: true
+  retries: 3
+  delay: 1
+  until: upgrade_crd_result.rc == 0
+
+- name: Copy upgrade plan to target machine
+  ansible.builtin.copy:
+    src: upgrade_plan.yml
+    dest: /tmp/upgrade_plan.yml
+  tags: upgrade
+
+- name: Apply system upgrade plan from upgrade_plan.yml
+  ansible.builtin.command:
+    cmd: "kubectl apply -f /tmp/upgrade_plan.yml"
+  register: upgrade_plan_result
+  retries: 3
+  delay: 5
+  until: upgrade_plan_result.rc == 0
+  tags: upgrade
+
+- name: Delete temporary upgrade plan file
+  ansible.builtin.file:
+    path: /tmp/upgrade_plan.yml
+    state: absent
