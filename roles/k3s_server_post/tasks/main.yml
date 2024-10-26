@@ -19,9 +19,6 @@
   tags: upgrade
   when: auto_upgrade is defined and auto_upgrade == true
 
-- name: Deploy system-upgrade-controller
-  include_tasks: ingress.yml
-
 - name: Remove tmp directory used for manifests
   file:
     path: /tmp/k3s
