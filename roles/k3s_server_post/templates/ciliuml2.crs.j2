@@ -6,10 +6,7 @@ spec:
   serviceSelector:
     matchLabels:
       l2: "true" 
-  nodeSelector:
-    matchExpressions:
-      - key: node-role.kubernetes.io/control-plane
-        operator: DoesNotExist
+  nodeSelector: {}
   interfaces:
   - ^eth[0-9]+
   externalIPs: true

@@ -12,7 +12,7 @@
 - name: Deploy metallb pool
   ansible.builtin.include_tasks: metallb.yml
   tags: metallb
-  when: kube_vip_lb_ip_range is not defined and cilium_iface is not defined
+  when: kube_vip_lb_ip_range is not defined and (cilium_l2 | default(false)) == false
 
 - name: Deploy system-upgrade-controller
   include_tasks: auto_upgrade.yml
