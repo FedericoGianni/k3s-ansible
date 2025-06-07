@@ -28,6 +28,9 @@ cluster_cidr: 10.52.0.0/16
 # enable cilium bgp control plane for lb services and pod cidrs. disables metallb.
 cilium_bgp: false
 
+# enable cilium mTLS
+cilium_mtls: false 
+
 # bgp parameters for cilium cni. only active when cilium_iface is defined and cilium_bgp is true.
 cilium_bgp_my_asn: "64513"
 cilium_bgp_peer_asn: "64512"
