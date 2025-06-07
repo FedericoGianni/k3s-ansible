@@ -28,8 +28,12 @@ cluster_cidr: 10.52.0.0/16
 # enable cilium bgp control plane for lb services and pod cidrs. disables metallb.
 cilium_bgp: false
 
-# enable cilium mTLS
+# enable cilium mTLS (note that this does not also encrypt traffic, only provides mutual authentication)
 cilium_mtls: false 
+
+# enable cilium encryption and define encryption type (default wireguard) 
+cilium_encryption: false
+cilium_encryption_type: wireguard
 
 # bgp parameters for cilium cni. only active when cilium_iface is defined and cilium_bgp is true.
 cilium_bgp_my_asn: "64513"
