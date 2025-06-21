@@ -179,7 +179,7 @@
         --helm-set k8sClientRateLimit.burst={{ cilium_l2_burst }} \
         # {% endif %}
         --helm-set k8sServiceHost="{{ apiserver_endpoint }}"
-        --helm-set k8sServicePort="6444"
+        --helm-set k8sServicePort="6443"
         --helm-set routingMode={{ cilium_mode }}
         --helm-set autoDirectNodeRoutes={{ "true" if cilium_mode == "native" else "false" }}
         --helm-set kubeProxyReplacement={{ kube_proxy_replacement }}
