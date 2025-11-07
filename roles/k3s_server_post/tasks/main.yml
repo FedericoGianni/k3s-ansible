@@ -12,7 +12,12 @@
 - name: Deploy metallb pool
   ansible.builtin.include_tasks: metallb.yml
   tags: metallb
-  when: kube_vip_lb_ip_range is not defined and (not cilium_bgp or cilium_iface is not defined)
+  when: kube_vip_lb_ip_range is not defined and (cilium_l2 | default(false)) == false
+
+- name: Deploy system-upgrade-controller
+  include_tasks: auto_upgrade.yml
+  tags: upgrade
+  when: auto_upgrade is defined and auto_upgrade == true
 
 - name: Remove tmp directory used for manifests
   ansible.builtin.file:

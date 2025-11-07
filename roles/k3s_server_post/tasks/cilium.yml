@@ -170,8 +170,16 @@
         {% if cilium_mode == "native" or (cilium_bgp and cilium_exportPodCIDR != 'false') %}
         --helm-set ipv4NativeRoutingCIDR={{ cluster_cidr }}
         {% endif %}
-        --helm-set k8sServiceHost="127.0.0.1"
-        --helm-set k8sServicePort="6444"
+        # {% if cilium_l2 == true %}
+        --helm-set l2announcements.enabled=true
+        --helm-set kubeProxyReplacement=true
+        --helm-set ipam.mode=kubernetes
+        --helm-set externalIPs.enabled=true
+        --helm-set k8sClientRateLimit.qps={{ cilium_l2_qps }} \
+        --helm-set k8sClientRateLimit.burst={{ cilium_l2_burst }} \
+        # {% endif %}
+        --helm-set k8sServiceHost="{{ apiserver_endpoint }}"
+        --helm-set k8sServicePort="6443"
         --helm-set routingMode={{ cilium_mode }}
         --helm-set autoDirectNodeRoutes={{ "true" if cilium_mode == "native" else "false" }}
         --helm-set kubeProxyReplacement={{ kube_proxy_replacement }}
@@ -180,6 +188,12 @@
         --helm-set hubble.enabled={{ "true" if cilium_hubble else "false" }}
         --helm-set hubble.relay.enabled={{ "true" if cilium_hubble else "false" }}
         --helm-set hubble.ui.enabled={{ "true" if cilium_hubble else "false" }}
+        --helm-set authentication.mutual.spire.enabled={{ "true" if cilium_mtls else "false" }}
+        --helm-set authentication.mutual.spire.install.enabled={{ "true" if cilium_mtls else "false" }}
+        --helm-set encryption.enabled={{ "true" if cilium_encryption else "false" }}
+        {% if cilium_encryption is not false %}
+        --helm-set encryption.type={{ cilium_encryption_type | default('wireguard') }}
+        {% endif %}
         {% if kube_proxy_replacement is not false %}
         --helm-set bpf.loadBalancer.algorithm={{ bpf_lb_algorithm }}
         --helm-set bpf.loadBalancer.mode={{ bpf_lb_mode }}
@@ -217,6 +231,30 @@
         label: "{{ item.type }}/{{ item.name }}"
       when: >-
         not item.check_hubble | default(false) or (item.check_hubble | default(false) and cilium_hubble)
+
+    - name: Configure Cilium L2
+      when: cilium_l2
+      block:
+        - name: Copy L2 CR manifests to first master
+          ansible.builtin.template:
+            src: ciliuml2.crs.j2
+            dest: /tmp/k3s/cilium-l2.yaml
+            owner: root
+            group: root
+            mode: "0755"
+
+        - name: Apply L2 CR manifests
+          ansible.builtin.command:
+            cmd: "{{ k3s_kubectl_binary | default('k3s kubectl') }} apply -f /tmp/k3s/cilium-l2.yaml"
+          register: apply_l2
+          changed_when: "'configured' in apply_l2.stdout or 'created' in apply_l2.stdout"
+          failed_when: "'is invalid' in apply_l2.stderr"
+          ignore_errors: true
+
+        - name: Print error if L2 manifest apply fails
+          when: "'is invalid' in apply_l2.stderr"
+          ansible.builtin.debug:
+            msg: "{{ apply_l2.stderr }}"
 
     - name: Configure Cilium BGP
       when: cilium_bgp
