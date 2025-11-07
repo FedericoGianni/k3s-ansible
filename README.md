@@ -172,6 +172,9 @@ See the commands [here](https://technotim.live/posts/k3s-etcd-ansible/#testing-y
 | `k3s_server_post` | `cilium_bgp_lb_cidr` | string | `192.168.31.0/24` | Not required | BGP load balancer IP range |
 | `k3s_server_post` | `cilium_exportPodCIDR` | bool | `true` | Not required | Export pod CIDR |
 | `k3s_server_post` | `cilium_hubble` | bool | `true` | Not required | Enable Cilium Hubble |
+| `k3s_server_post` | `cilium_mtls` | bool | `false` | Not required | Enable Cilium mutual authentication |
+| `k3s_server_post` | `cilium_encryption` | bool | `false` | Not required | Enable Cilium traffic encryption |
+| `k3s_server_post` | `cilium_encryption_type` | string | `wireguard` | Required | Define cilium traffic encryption type |
 | `k3s_server_post` | `cilium_mode` | string | `native` | Not required | Inner-node communication mode (choices are `native` and `routed`) |
 | `k3s_server_post` | `auto_upgrade` | bool | `false` | Not required | Enable [automated upgrades](https://docs.k3s.io/upgrades/automated) |
 | `k3s_server_post` | `cluster_cidr` | string | `10.52.0.0/16` | Not required | Inner-cluster IP range |

@@ -188,8 +188,12 @@
         --helm-set hubble.enabled={{ "true" if cilium_hubble else "false" }}
         --helm-set hubble.relay.enabled={{ "true" if cilium_hubble else "false" }}
         --helm-set hubble.ui.enabled={{ "true" if cilium_hubble else "false" }}
-        --helm-set authentication.mutual.spire.enabled=true
-        --helm-set authentication.mutual.spire.install.enabled=true
+        --helm-set authentication.mutual.spire.enabled={{ "true" if cilium_mtls else "false" }}
+        --helm-set authentication.mutual.spire.install.enabled={{ "true" if cilium_mtls else "false" }}
+        --helm-set encryption.enabled={{ "true" if cilium_encryption else "false" }}
+        {% if cilium_encryption is not false %}
+        --helm-set encryption.type={{ cilium_encryption_type | default('wireguard') }}
+        {% endif %}
         {% if kube_proxy_replacement is not false %}
         --helm-set bpf.loadBalancer.algorithm={{ bpf_lb_algorithm }}
         --helm-set bpf.loadBalancer.mode={{ bpf_lb_mode }}
@@ -283,8 +287,8 @@
         - name: Test for BGP config resources
           ansible.builtin.command: "{{ item }}"
           loop:
-            - k3s kubectl get CiliumBGPPeeringPolicy.cilium.io
-            - k3s kubectl get CiliumLoadBalancerIPPool.cilium.io
+            - "{{ k3s_kubectl_binary | default('k3s kubectl') }} get CiliumBGPPeeringPolicy.cilium.io"
+            - "{{ k3s_kubectl_binary | default('k3s kubectl') }} get CiliumLoadBalancerIPPool.cilium.io"
           changed_when: false
           loop_control:
             label: "{{ item }}"
