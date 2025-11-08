@@ -116,12 +116,18 @@
       when: ping_result.rc != 0
 
     - name: Test for existing Cilium install
-      ansible.builtin.command: |
-        {{ k3s_kubectl_binary | default('k3s kubectl') }} -n kube-system get daemonsets cilium
+      ansible.builtin.command: "{{ k3s_kubectl_binary | default('k3s kubectl') }} -n kube-system get daemonsets cilium"
       register: cilium_installed
       failed_when: false
       changed_when: false
-      ignore_errors: true
+
+    - name: Debug Cilium detection
+      ansible.builtin.debug:
+        msg: |
+          Return code: {{ cilium_installed.rc }}
+          Stdout: {{ cilium_installed.stdout }}
+          Stderr: {{ cilium_installed.stderr }}
+          Will install: {{ cilium_installed.rc != 0 or (cilium_needs_update | default(false)) }}
 
     - name: Check existing Cilium install
       when: cilium_installed.rc == 0
@@ -158,26 +164,22 @@
 
     - name: Install Cilium
       ansible.builtin.command: >-
-        {% if cilium_installed.rc != 0 %}
         cilium install
-        {% else %}
-        cilium upgrade
-        {% endif %}
         --version "{{ cilium_tag }}"
         --helm-set operator.replicas="1"
         {{ '--helm-set devices=' + cilium_iface if cilium_iface != 'auto' else '' }}
         --helm-set ipam.operator.clusterPoolIPv4PodCIDRList={{ cluster_cidr }}
         {% if cilium_mode == "native" or (cilium_bgp and cilium_exportPodCIDR != 'false') %}
-        --helm-set ipv4NativeRoutingCIDR={{ cluster_cidr }}
+          --helm-set ipv4NativeRoutingCIDR={{ cluster_cidr }}
         {% endif %}
-        # {% if cilium_l2 == true %}
-        --helm-set l2announcements.enabled=true
-        --helm-set kubeProxyReplacement=true
-        --helm-set ipam.mode=kubernetes
-        --helm-set externalIPs.enabled=true
-        --helm-set k8sClientRateLimit.qps={{ cilium_l2_qps }} \
-        --helm-set k8sClientRateLimit.burst={{ cilium_l2_burst }} \
-        # {% endif %}
+        {% if cilium_l2 == true %}
+          --helm-set l2announcements.enabled=true
+          --helm-set kubeProxyReplacement=true
+          --helm-set ipam.mode=kubernetes
+          --helm-set externalIPs.enabled=true
+          --helm-set k8sClientRateLimit.qps={{ cilium_l2_qps }}
+          --helm-set k8sClientRateLimit.burst={{ cilium_l2_burst }}
+        {% endif %}
         --helm-set k8sServiceHost="{{ apiserver_endpoint }}"
         --helm-set k8sServicePort="6443"
         --helm-set routingMode={{ cilium_mode }}
@@ -190,19 +192,32 @@
         --helm-set hubble.ui.enabled={{ "true" if cilium_hubble else "false" }}
         --helm-set authentication.mutual.spire.enabled={{ "true" if cilium_mtls else "false" }}
         --helm-set authentication.mutual.spire.install.enabled={{ "true" if cilium_mtls else "false" }}
+        {% if cilium_mtls %}
+          --helm-set authentication.mutual.spire.install.server.securityContext.runAsUser=0
+          --helm-set authentication.mutual.spire.install.server.securityContext.runAsGroup=0
+          --helm-set authentication.mutual.spire.install.agent.securityContext.runAsUser=0
+          --helm-set authentication.mutual.spire.install.agent.securityContext.runAsGroup=0
+          --helm-set authentication.mutual.spire.serverAddress="spire-server.cilium-spire.svc.cluster.local:8081"
+          --helm-set authentication.mutual.spire.install.agent.tolerations[0].key=node-role.kubernetes.io/control-plane
+          --helm-set authentication.mutual.spire.install.agent.tolerations[0].effect=NoSchedule
+          --helm-set authentication.mutual.spire.install.agent.tolerations[0].operator=Exists
+          --helm-set authentication.mutual.spire.install.agent.tolerations[1].key=node-role.kubernetes.io/master
+          --helm-set authentication.mutual.spire.install.agent.tolerations[1].effect=NoSchedule
+          --helm-set authentication.mutual.spire.install.agent.tolerations[1].operator=Exists
+        {% endif %}
         --helm-set encryption.enabled={{ "true" if cilium_encryption else "false" }}
         {% if cilium_encryption is not false %}
-        --helm-set encryption.type={{ cilium_encryption_type | default('wireguard') }}
+          --helm-set encryption.type={{ cilium_encryption_type | default('wireguard') }}
         {% endif %}
         {% if kube_proxy_replacement is not false %}
-        --helm-set bpf.loadBalancer.algorithm={{ bpf_lb_algorithm }}
-        --helm-set bpf.loadBalancer.mode={{ bpf_lb_mode }}
+          --helm-set bpf.loadBalancer.algorithm={{ bpf_lb_algorithm }}
+          --helm-set bpf.loadBalancer.mode={{ bpf_lb_mode }}
         {% endif %}
       environment:
         KUBECONFIG: "{{ ansible_user_dir }}/.kube/config"
       register: cilium_install_result
       changed_when: cilium_install_result.rc == 0
-      when: cilium_installed.rc != 0 or cilium_needs_update
+      when: cilium_installed.rc != 0 or (cilium_needs_update | default(false))
 
     - name: Wait for Cilium resources
       ansible.builtin.command: >-

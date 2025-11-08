@@ -43,7 +43,7 @@ argument_specs:
 
       calico_tag:
         description: Calico version tag
-        default: v3.27.2
+        default: v3.31.0
 
       cilium_bgp:
         description:
@@ -131,7 +131,7 @@ argument_specs:
 
       metal_lb_controller_tag_version:
         description: Image tag for MetalLB
-        default: v0.14.3
+        default: v0.15.2
 
       metal_lb_mode:
         description: Metallb mode

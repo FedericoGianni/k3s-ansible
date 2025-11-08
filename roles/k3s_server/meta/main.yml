@@ -80,7 +80,7 @@ argument_specs:
 
       kube_vip_tag_version:
         description: Image tag for kube-vip
-        default: v0.7.2
+        default: v1.0.1
 
       kube_vip_cloud_provider_tag_version:
         description: Tag for kube-vip-cloud-provider manifest when enabled
@@ -92,11 +92,11 @@ argument_specs:
 
       metal_lb_controller_tag_version:
         description: Image tag for MetalLB
-        default: v0.14.3
+        default: v0.15.2
 
       metal_lb_speaker_tag_version:
         description: Image tag for MetalLB
-        default: v0.14.3
+        default: v0.15.2
 
       metal_lb_type:
         choices:
