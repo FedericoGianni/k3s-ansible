@@ -5,14 +5,14 @@
   register: cilium_cli_exists
 
 - name: Uninstall Cilium via CLI if available (before stopping k3s)
-  ansible.builtin.command: cilium uninstall --wait
+  ansible.builtin.command: cilium uninstall
   failed_when: false
   changed_when: false
   when: cilium_cli_exists.stat.exists
   environment:
     KUBECONFIG: "{{ ansible_user_dir }}/.kube/config"
 
-- name: Remove Cilium SPIRE namespace (before stopping k3s)  
+- name: Remove Cilium SPIRE namespace (before stopping k3s)
   ansible.builtin.command: kubectl delete namespace cilium-spire --ignore-not-found=true --wait=false
   failed_when: false
   changed_when: false
@@ -23,7 +23,7 @@
   ansible.builtin.command: "{{ item }}"
   with_items:
     - kubectl delete daemonset cilium -n kube-system --ignore-not-found=true --wait=false
-    - kubectl delete deployment cilium-operator -n kube-system --ignore-not-found=true --wait=false  
+    - kubectl delete deployment cilium-operator -n kube-system --ignore-not-found=true --wait=false
     - kubectl delete deployment hubble-relay -n kube-system --ignore-not-found=true --wait=false
     - kubectl delete deployment hubble-ui -n kube-system --ignore-not-found=true --wait=false
   failed_when: false
@@ -81,7 +81,7 @@
     - /usr/local/bin/k3s
     - /usr/local/bin/cilium
     - /usr/bin/cilium
-    - /tmp/k3s/cilium-* 
+    - /tmp/k3s/cilium-*
     - "{{ systemd_dir }}/k3s.service"
     - "{{ systemd_dir }}/k3s-node.service"
     - /etc/rancher/k3s
